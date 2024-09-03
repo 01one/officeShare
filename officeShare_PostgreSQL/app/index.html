@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Share</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: white;
+            color: black;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            margin-top: 200px;
+        }
+
+        .custom-file-upload {
+            border: 1px solid #555;
+            border-radius: 10px;
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #ffffff;
+            background-color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #444;
+            color: #ffffff;
+        }
+
+        .progress {
+            height: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .progress-bar {
+            float: left;
+            width: 0;
+            height: 100%;
+            font-size: 12px;
+            line-height: 20px;
+            color: #ffffff;
+            text-align: center;
+            background-color: #5bc0de;
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .15);
+            transition: width .6s ease;
+        }
+
+        .list-group-item {
+            background-color: #3715ff05;
+        }
+
+        .list-group-item a {
+            color: #5bc0de;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .list-group-item a:hover {
+            color: black;
+        }
+
+        .list-group-item .btn-danger {
+            background-color: #d9534f;
+            border-color: #d43f3a;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .list-group-item .btn-danger:hover {
+            background-color: #c9302c;
+            border-color: #ac2925;
+        }
+
+
+        .alert-info i {
+            margin-right: 10px;
+        }
+    </style>
+
+    <div class="container">
+        <h2 class="mb-4"><i class="fas fa-share-alt"></i> Share Files</h2>
+
+        <div class="border border-dashed rounded p-4 mb-4 text-center" id="drag-drop-area">
+            <label for="file-upload" class="custom-file-upload btn btn-outline-primary">
+                <i class="fas fa-file-upload"></i> Choose File
+            </label>
+            <input type="file" id="file-upload" class="file-upload-input"
+                accept=".docx, .doc, .xls, .xlsx, .ppt, .pptx, .odt, .ods, .odp, .odg, .jpg, .jpeg, .png, .gif, .zip, .7z, .apk"
+                style="display: none;">
+            <div id="file-name" class="mt-2"></div>
+
+            <div class="progress">
+                <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                    aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div id="upload-status" class="mt-2"></div>
+
+
+
+
+
+
+
+        </div>
+
+        <ul id="fileList" class="list-group mb-4">
+            <!-- File links will be displayed here -->
+        </ul>
+
+        <div class="alert alert-info">
+            <p class="mb-0"><i class="fas fa-info-circle"></i> Supported file formats: .docx, .xls, .xlsx, .ppt, .pptx,
+                .jpg, .jpeg, .png, .gif, .7z, .zip, .apk</p>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+
+    <script>
+
+const baseURL = `${window.location.protocol}//${window.location.host}`;
+
+const fileUploadURL = baseURL + "/upload";
+const fileListURL = baseURL + "/file";
+const fileDeleteURL = baseURL + "/delete/";
+const fileDownloadURL = baseURL + "/download/";
+
+console.log("Base URL:", baseURL);
+console.log("File Upload URL:", fileUploadURL);
+console.log("File List URL:", fileListURL);
+console.log("File Delete URL:", fileDeleteURL);
+console.log("File Download URL:", fileDownloadURL);
+
+
+
+
+const socket = io();
+
+// Handle updates via Socket.IO
+socket.on('update', function (data) {
+    if (data.text || data.text === '') {
+        if (data.text === 'update') {
+            fetchFileList();
+        };
+    }
+});
+
+var dragDropArea = document.getElementById('drag-drop-area');
+
+// Prevent default behavior (Prevent file from being opened)
+dragDropArea.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dragDropArea.classList.add('dragover');
+});
+
+dragDropArea.addEventListener('dragleave', function () {
+    dragDropArea.classList.remove('dragover');
+});
+
+dragDropArea.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dragDropArea.classList.remove('dragover');
+    var file = e.dataTransfer.files[0];
+    handleFileUpload(file);
+});
+
+document.getElementById('file-upload').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    handleFileUpload(file);
+});
+
+function handleFileUpload(file) {
+    var fileName = file.name;
+    document.getElementById('file-name').innerText = fileName;
+
+    var formData = new FormData();
+    formData.append('file', file);
+
+    var progressBar = document.getElementById('progress-bar');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', fileUploadURL, true);
+    // Track upload progress
+    xhr.upload.onprogress = function (event) {
+        if (event.lengthComputable) {
+            var percentComplete = (event.loaded / event.total) * 100;
+            progressBar.style.width = percentComplete + '%';
+            progressBar.setAttribute('aria-valuenow', percentComplete);
+
+            var uploadedSize = (event.loaded / 1024).toFixed(2);
+            var totalSize = (event.total / 1024).toFixed(2);
+            var sizeUnit = 'KB';
+
+            if (uploadedSize >= 1024) {
+                uploadedSize = (uploadedSize / 1024).toFixed(2);
+                totalSize = (totalSize / 1024).toFixed(2);
+                sizeUnit = 'MB';
+            }
+
+            document.getElementById('upload-status').innerText = `Uploaded ${uploadedSize} of ${totalSize} ${sizeUnit} (${percentComplete.toFixed(2)}%)`;
+        }
+    };
+
+    // When upload is complete
+    xhr.onload = function () {
+        if (xhr.status == 200) {
+            console.log(xhr.responseText);
+            fetchFileList();
+            socket.emit('update', { text: 'update' });
+        } else {
+            console.error('Error:', xhr.statusText);
+        }
+    };
+
+    xhr.onerror = function () {
+        console.error('Error uploading file.');
+    };
+
+    xhr.send(formData);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    fetchFileList();
+});
+
+function deleteFile(filename) {
+    fetch(`${fileDeleteURL}${encodeURIComponent(filename)}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to delete file');
+        }
+        fetchFileList();
+        socket.emit('update', { text: 'update' });
+        console.log('File deleted successfully');
+    })
+    .catch(error => {
+        console.error('Error deleting file:', error);
+    });
+}
+
+function fetchFileList() {
+    fetch(fileListURL)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        return response.json();
+    })
+    .then(files => {
+        const fileList = document.getElementById("fileList");
+        fileList.innerHTML = ""; // Clear previous list items
+        files.forEach(file => {
+            const listItem = document.createElement("li");
+            listItem.className = "list-group-item d-flex justify-content-between align-items-center";
+            const link = document.createElement("a");
+            link.href = `${fileDownloadURL}${encodeURIComponent(file)}`;
+            link.textContent = file;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "btn btn-danger btn-sm ml-2";
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = function () {
+                console.log("Delete button clicked for file:", file);
+                deleteFile(file);
+            };
+
+            listItem.appendChild(link);
+            listItem.appendChild(deleteButton);
+            fileList.appendChild(listItem);
+        });
+    })
+    .catch(error => {
+        console.error("Error fetching files:", error);
+    });
+}
+
+    </script>
+    </body>
+
+</html>

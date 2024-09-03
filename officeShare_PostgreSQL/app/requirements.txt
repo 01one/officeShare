@@ -1,0 +1,5 @@
+peewee==3.17.6
+python-socketio==5.11.3
+tornado==6.4.1
+psycopg2-binary
+

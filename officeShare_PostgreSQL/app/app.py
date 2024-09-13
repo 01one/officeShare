@@ -11,7 +11,7 @@ from tornado.ioloop import IOLoop
 from tornado import gen
 import re
 import socketio
-
+import secrets
 
 
 import psycopg2
@@ -258,8 +258,9 @@ async def update(sid, data):
 	await sio.emit('update', {'text': 'update'}, skip_sid=sid)
 
 if __name__ == "__main__":
+	cookie_secret = secrets.token_hex(16)
 	settings = {
-		'cookie_secret': '2938479284urkoasfdsadfsadfwe675765hdkfj',
+		'cookie_secret': cookie_secret,
 		"max_body_size": 100 * 1024 * 1024,
 		'login_url': '/login',
 		'default_handler_class': NotFoundHandler

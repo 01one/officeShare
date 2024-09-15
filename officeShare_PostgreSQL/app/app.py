@@ -13,6 +13,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.future import select
 
 # Configuration
+
+# 1. Accessing PostgreSQL from within the Docker container.
+# 1. postgres://your_user:your_password@postgres:5432/your_database
+
+# 2. Accessing PostgreSQL from outside the Docker container, such as from your host machine.
+# 2. postgresql://your_user:your_password@localhost:5432/your_database
+
+
 DATABASE_URL = 'postgresql+asyncpg://your_user:your_password@postgres:5432/your_database'
 PASSWORD = "12345****"
 # Database setup with connection pooling

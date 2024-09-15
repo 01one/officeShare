@@ -13,9 +13,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.future import select
 
 # Configuration
-DATABASE_URL = 'postgresql+asyncpg://myuser:mypassword@localhost:5432/mydatabase'
+DATABASE_URL = 'postgresql+asyncpg://your_user:your_password@postgres:5432/your_database'
 PASSWORD = "12345****"
-
 # Database setup with connection pooling
 engine = create_async_engine(
     DATABASE_URL, 

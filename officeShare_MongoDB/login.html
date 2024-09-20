@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+
+
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+
+        }
+
+
+        .title {
+            color: black;
+        }
+
+        .column {
+            margin-top: -200px;
+            color: black;
+            max-width: 600px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 1px;
+        }
+
+        .button {
+
+            background-color: #0cab60;
+            border-color: #28a378;
+
+        }
+
+
+
+</style>
+</head>
+<body>
+    <div class="columns is-centered">
+        <div class="column">
+            <h2 class="title is-2 has-text-centered">Login</h2>
+            <form  id="login-form">
+                <div class="field">
+                    <div class="control has-icons-left">
+                        <input class="input" type="password" id="password" placeholder="Enter Password">
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-fullwidth" type="submit">Login</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript code -->
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var password = document.getElementById('password').value;
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/authenticate', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        window.location.href = '/';
+                    } else {
+                        alert('Authentication failed');
+                    }
+                }
+            };
+            xhr.send('password=' + encodeURIComponent(password));
+        });
+    </script>
+</body>
+</html>
